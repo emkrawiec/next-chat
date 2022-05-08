@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
+}
+
+model User {
+  ID                        Int                   @id @default(autoincrement())
+  email                     String                @unique
+  password                  String
+  createdRooms              Room[]
+  rooms                     UsersRooms[]
+  features                  UserFeatures[]
+  messages                  Message[]
+  passwordRecoveryTimestamp DateTime?
+  passwordRecoveryHash      String?
+  avatar                    String?
+  paymentGatewayCustomerID  String?
+  paymentIntents            PaymentIntent[]
+  kickedOutRooms            KickedOutUsersRooms[]
+}
+
+model Feature {
+  ID             Int             @id @default(autoincrement())
+  users          UserFeatures[]
+  prices         Price[]
+  paymentIntents PaymentIntent[]
+  featureId      String // Product ID from Stripe
+}
+
+enum PaymentIntentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model PaymentIntent {
+  ID                            Int                 @id @default(autoincrement())
+  user                          User                @relation(fields: [userId], references: [ID])
+  userId                        Int
+  feature                       Feature             @relation(fields: [featureId], references: [ID])
+  featureId                     Int
+  paymentGatewayPaymentIntentId String              @unique
+  createdAt                     DateTime            @default(now())
+  paymentStatus                 PaymentIntentStatus @default(PENDING)
+}
+
+model Price {
+  ID        Int     @id @default(autoincrement())
+  feature   Feature @relation(fields: [featureId], references: [ID])
+  featureId Int
+  priceId   String
+}
+
+model UserFeatures {
+  user      User    @relation(fields: [userId], references: [ID])
+  userId    Int
+  feature   Feature @relation(fields: [featureId], references: [ID])
+  featureId Int
+  createdAt DateTime @default(now())
+
+  @@id([userId, featureId])
+}
+
+model UsersRooms {
+  user   User @relation(fields: [userId], references: [ID])
+  userId Int
+  room   Room @relation(fields: [roomId], references: [ID], onDelete: Cascade)
+  roomId Int
+
+  @@id([userId, roomId])
+}
+
+model KickedOutUsersRooms {
+  user   User @relation(fields: [userId], references: [ID])
+  userId Int
+  room   Room @relation(fields: [roomId], references: [ID], onDelete: Cascade)
+  roomId Int
+
+  @@id([userId, roomId])
+}
+
+model Room {
+  ID            Int                   @id @default(autoincrement())
+  name          String
+  createdAt     DateTime
+  archivedAt    DateTime?
+  creator       User                  @relation(fields: [creatorUserId], references: [ID])
+  creatorUserId Int
+  kickedUsers   KickedOutUsersRooms[]
+  users         UsersRooms[]
+  messages      Message[]
+}
+
+model Message {
+  ID        Int      @id @default(autoincrement())
+  createdAt DateTime
+  message   String
+  room      Room     @relation(fields: [roomId], references: [ID], onDelete: Cascade)
+  roomId    Int
+  author    User     @relation(fields: [authorId], references: [ID])
+  authorId  Int
+}

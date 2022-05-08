@@ -1,0 +1,11 @@
+{
+  "name": "@next-chat/types",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.d.ts",
+  "types": "index.d.ts",
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}

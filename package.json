@@ -1,0 +1,20 @@
+{
+  "name": "root",
+  "private": true,
+  "devDependencies": {
+    "eslint": "^8.14.0",
+    "husky": "^7.0.4",
+    "lerna": "^4.0.0",
+    "prettier": "^2.6.2"
+  },
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "dev": "lerna run dev --stream --parallel",
+    "prepare": "husky install"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@next-chat/shared",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "keywords": [],
+  "exports": {
+    "./config": {
+      "import": "./config/index.ts",
+      "require": "./config/index.ts"
+    }
+  },
+  "author": "",
+  "license": "MIT"
+}
