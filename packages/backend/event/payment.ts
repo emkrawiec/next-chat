@@ -1,6 +1,9 @@
-import mitt from "mitt";
-// 
-import { addFeatureForUser, prepareAddFeatureForUserDtoFromPaymentFullfilledEvent } from "../services/feature";
+import mitt from 'mitt';
+//
+import {
+  addFeatureForUser,
+  prepareAddFeatureForUserDtoFromPaymentFullfilledEvent,
+} from '../services/feature';
 
 export interface PaymentFullfilledEvent {
   paymentIntentId: number;
@@ -11,6 +14,8 @@ export const paymentEventEmitter = mitt<{
 }>();
 
 paymentEventEmitter.on('payment_fulfilled', async (payload) => {
-  const dto = await prepareAddFeatureForUserDtoFromPaymentFullfilledEvent(payload);
+  const dto = await prepareAddFeatureForUserDtoFromPaymentFullfilledEvent(
+    payload
+  );
   addFeatureForUser(dto);
 });

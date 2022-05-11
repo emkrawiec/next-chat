@@ -1,11 +1,16 @@
-import { Request, Response } from "express";
-// 
+import Express from 'express';
+import {
+  EmptyObject,
+  APIPaymentPayload,
+  APICreatePaymentIntentResponsePayload,
+} from '@next-chat/types';
+//
 import { preparePayment, handlePaymentStatus } from '../services/payment';
-import { PayloadPayload, PaymentDTO } from '../dto/payment-dto';
+import { PaymentDTO } from '../dto/payment-dto';
 
 export const createPaymentAction = async (
-  req: Request<{}, {}, PayloadPayload>,
-  res: Response
+  req: Express.Request<EmptyObject, EmptyObject, APIPaymentPayload>,
+  res: Express.Response<APICreatePaymentIntentResponsePayload>
 ) => {
   const { featureId, priceId } = req.body;
   const userId = req.user!.ID;
@@ -13,32 +18,36 @@ export const createPaymentAction = async (
   const dto: PaymentDTO = {
     featureId,
     priceId,
-    userId
-  }
+    userId,
+  };
 
   try {
     const checkoutSession = await preparePayment(dto);
 
     res.status(200).json({
-      checkoutSessionId: checkoutSession.sessionId
+      checkoutSessionId: checkoutSession.sessionId,
     });
   } catch (err: unknown) {
     res.status(500).send();
   }
 };
 
-export const handlePaymentStatusAction = async (req: Request, res: Response) => {
+// Webhook handler.
+export const handlePaymentStatusAction = async (
+  req: Express.Request,
+  res: Express.Response
+) => {
   const payload = req.body;
   const signature = req.headers['stripe-signature'];
 
   try {
     handlePaymentStatus({
       signature,
-      payload
+      payload,
     });
-    
+
     res.status(200).send();
-  } catch (err) {
+  } catch (err: unknown) {
     res.status(400).send();
   }
-}
+};

@@ -8,8 +8,8 @@ export const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { path: '/', httpOnly: false, secure: false, },
+  cookie: { path: '/', httpOnly: false, secure: false },
   store: new RedisStore({
-    client: redis
-  })
-})
+    client: redis,
+  }),
+});

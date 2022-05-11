@@ -60,7 +60,7 @@ export const editUserProfile = async (dto: EditUserProfileDTO) => {
 
     if (avatar) {
       imageQueue.add({
-        filename: `uploads/avatars/${updatedProfile.avatar}`,
+        filename: `uploads/avatar/${updatedProfile.avatar}`,
         type: ImageJobTypes.RESIZE_IMAGE,
         payload: {
           width: 200,

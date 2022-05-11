@@ -1,30 +1,28 @@
-import { NextFunction, Request, Response } from "express";
-import { PasswordRecoveryDTO } from './../dto/auth-dto';
-import { ClientRequestError } from "./../error/ClientRequestError";
-import { userRegisterDataValidator } from "../dto/auth-dto";
+import {
+  EmptyObject,
+  APIUserProfile,
+  APISignupRequestPayload,
+  APIPasswordRecoveryPrepareRequestPayload,
+  APICheckPasswordRecoveryTokenRequestPayload,
+  APIPasswordRecoveryRequestPayload,
+} from '@next-chat/types';
+import Express from 'express';
+//
+import { PasswordRecoveryDTO } from '../dto/auth-dto';
+import { ClientRequestError } from '../error/ClientRequestError';
 import {
   signupUser,
   processPasswordRecoveryPreparation,
   isPasswordRecoveryTokenValid,
   processPasswordRecovery,
   getUserProfile,
-} from "../services/auth";
-import { logger } from '../services/log/logger';
+} from '../services/auth';
+import { logger } from '../services/log';
 
-export const validateRegisterActionPayloadMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
+export const registerAction = async (
+  req: Express.Request<EmptyObject, EmptyObject, APISignupRequestPayload>,
+  res: Express.Response<APIUserProfile>
 ) => {
-  try {
-    userRegisterDataValidator(req.body);
-    next();
-  } catch (err: unknown) {
-    return res.status(400).send();
-  }
-};
-
-export const registerAction = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {
@@ -33,7 +31,7 @@ export const registerAction = async (req: Request, res: Response) => {
       password,
     });
 
-    res.status(200).json(user);
+    return res.status(200).json(user);
   } catch (err: unknown) {
     if (err instanceof ClientRequestError) {
       res.status(400).send();
@@ -43,7 +41,14 @@ export const registerAction = async (req: Request, res: Response) => {
   }
 };
 
-export const forgotPasswordAction = async (req: Request, res: Response) => {
+export const forgotPasswordAction = async (
+  req: Express.Request<
+    EmptyObject,
+    EmptyObject,
+    APIPasswordRecoveryPrepareRequestPayload
+  >,
+  res: Express.Response
+) => {
   const { email } = req.body;
 
   try {
@@ -56,8 +61,12 @@ export const forgotPasswordAction = async (req: Request, res: Response) => {
 };
 
 export const checkPasswordRecoveryToken = async (
-  req: Request,
-  res: Response
+  req: Express.Request<
+    EmptyObject,
+    EmptyObject,
+    APICheckPasswordRecoveryTokenRequestPayload
+  >,
+  res: Express.Response
 ) => {
   const { token } = req.body;
 
@@ -74,12 +83,19 @@ export const checkPasswordRecoveryToken = async (
   }
 };
 
-export const passwordRecoveryAction = async (req: Request, res: Response) => {
+export const passwordRecoveryAction = async (
+  req: Express.Request<
+    EmptyObject,
+    EmptyObject,
+    APIPasswordRecoveryRequestPayload
+  >,
+  res: Express.Response
+) => {
   const { token, newPassword } = req.body;
-  const dto: PasswordRecoveryDTO =  {
+  const dto: PasswordRecoveryDTO = {
     token,
-    newPassword
-  }
+    newPassword,
+  };
 
   try {
     await processPasswordRecovery(dto);
@@ -91,8 +107,11 @@ export const passwordRecoveryAction = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserProfileAction = async (req: Request, res: Response) => {
-  const userId = req.user?.ID;
+export const getUserProfileAction = async (
+  req: Express.Request,
+  res: Express.Response<APIUserProfile>
+) => {
+  const userId = req.user!.ID;
 
   if (!userId) {
     return res.status(401).send();
@@ -108,17 +127,23 @@ export const getUserProfileAction = async (req: Request, res: Response) => {
     console.log(err);
     return res.status(500).send();
   }
-}
+};
 
-export const logoutAction = async (req: Request, res: Response) => {
+export const logoutAction = async (
+  req: Express.Request,
+  res: Express.Response
+) => {
   req.logout();
 
   logger.log('info', 'User has logged out.');
 
   return res.status(200).send();
-}
+};
 
-export const afterLoginAction = async (req: Request, res: Response) => {
+export const afterLoginAction = async (
+  req: Express.Request,
+  res: Express.Response
+) => {
   const userId = req.user?.ID;
 
   if (!userId) {
@@ -137,4 +162,4 @@ export const afterLoginAction = async (req: Request, res: Response) => {
     console.log(err);
     return res.status(500).send();
   }
-}
+};

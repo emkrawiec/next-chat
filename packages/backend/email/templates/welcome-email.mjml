@@ -1,0 +1,26 @@
+<mjml>
+  <mj-body>
+    <mj-section full-width="full-width" background-color="white">
+      <mj-column width="100%">
+        <mj-text align="center" font-size="18px" font-family="Verdana, sans-serif">
+          <h1>Welcome to next-chat!</h1>
+        </mj-text>
+      </mj-column>
+      <mj-column width="100%">
+        <mj-text font-size="16px" font-family="Verdana, sans-serif">
+          <p>
+            Hi there!
+          </p>
+          <p>
+            Thanks for registering with next-chat. Hope you have a great time using it!
+          </p>
+        </mj-text>
+        <mj-divider border-style="solid" border-width="1px" border-color="lightgrey" />
+        <mj-spacer height="50px" />
+        <mj-text font-size="16px" font-family="Verdana, sans-serif">
+          <p>Take care and keep chatting!</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

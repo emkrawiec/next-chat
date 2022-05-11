@@ -7,10 +7,24 @@
     "types": ["node"],
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      // "@config": ["config/index.ts"],
+      // "@controllers/*": ["controllers/*"],
+      // "@dto/*": ["dto/*"],
+      // "@error/*": ["error/*"],
+      // "@event/*": ["event/*"],
+      // "@jobs/*": ["jobs/*"],
+      // "@middleware/*": ["middleware/*"],
+      // "@queue/*": ["queue/*"],
+      // "@router/*": ["router/*"],
+      // "@services/*": ["services/*"],
+      // "@utils/*": ["utils/*"],
+    }
   },
   "include": [
-    "**/*.ts", 
+    "**/*.ts",
     "node_modules/.prisma/index.d.ts"
   ],
 }

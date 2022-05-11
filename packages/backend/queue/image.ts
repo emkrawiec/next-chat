@@ -32,5 +32,5 @@ imageQueue.process(imageJobHandler);
 imageQueue.on('active', imageJobTickHandler);
 imageQueue.on('completed', imageJobSuccessHandler);
 imageQueue.on('failed', (err) => {
-  // console.log(err);
+  console.log(err);
 });

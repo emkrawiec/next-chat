@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 import { EMAIL_TYPES } from '../services/mail';
 
 const MailDTO = z.object({
@@ -8,21 +8,20 @@ const MailDTO = z.object({
 });
 
 const WelcomeEmailDTO = MailDTO.pick({
-  to: true
+  to: true,
 });
 
-const PasswordRecoveryEmailDTO = MailDTO
-  .pick({
-    to: true,
-  }).extend({
-    link: z.string()
-  });
+const PasswordRecoveryEmailDTO = MailDTO.pick({
+  to: true,
+}).extend({
+  link: z.string(),
+});
 
 const MailJobDTO = MailDTO.extend({
-  type: z.nativeEnum(EMAIL_TYPES)
+  type: z.nativeEnum(EMAIL_TYPES),
 });
 
-export type MailJobDTO = z.infer<typeof MailJobDTO>
-export type WelcomeEmailDTO = z.infer<typeof WelcomeEmailDTO>
-export type PasswordRecoveryEmailDTO = z.infer<typeof PasswordRecoveryEmailDTO>
-export type MailDTO = z.infer<typeof MailDTO>
+export type MailJobDTO = z.infer<typeof MailJobDTO>;
+export type WelcomeEmailDTO = z.infer<typeof WelcomeEmailDTO>;
+export type PasswordRecoveryEmailDTO = z.infer<typeof PasswordRecoveryEmailDTO>;
+export type MailDTO = z.infer<typeof MailDTO>;

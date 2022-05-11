@@ -1,14 +1,28 @@
-import { UserProfile } from "@next-chat/types";
-import { Request, Response } from "express";
-import { EditUserProfileDTO } from "../dto/user-dto";
-import { getAllUserProfiles, editUserProfile, getUserProfilesByIds } from "../services/user";
+import Express from 'express';
+import { EmptyObject } from '@next-chat/types';
+//
+import { EditUserProfileDTO } from '../dto/user-dto';
+import {
+  getAllUserProfiles,
+  editUserProfile,
+  getUserProfilesByIds,
+} from '../services/user';
 
-export const getUsersAction = async (req: Request<{}, UserProfile[], {}, {
-  id: string[]
-}>, res: Response) => {
+export const getUsersAction = async (
+  req: Express.Request<
+    EmptyObject,
+    EmptyObject,
+    EmptyObject,
+    {
+      id: string[];
+    }
+  >,
+  res: Express.Response,
+  next: Express.NextFunction
+) => {
   try {
     let users;
-    
+
     if (req.query.id) {
       users = await getUserProfilesByIds(req.query.id.map((id) => Number(id)));
     } else {
@@ -21,22 +35,26 @@ export const getUsersAction = async (req: Request<{}, UserProfile[], {}, {
       return res.status(204).json([]);
     }
   } catch (err) {
-    console.log(err);
+    next(err);
   }
-}
+};
 
-export const editUserProfileAction = async (req: Request, res: Response) => {
+export const editUserProfileAction = async (
+  req: Express.Request,
+  res: Express.Response,
+  next: Express.NextFunction
+) => {
   try {
     const userId = req.user!.ID;
     const dto: EditUserProfileDTO = {
       userId,
       avatar: req.file?.filename,
-    }
-    
+    };
+
     await editUserProfile(dto);
 
     res.status(200).send();
-  } catch (err) {
-    console.log(err);
+  } catch (err: unknown) {
+    next(err);
   }
-}
+};

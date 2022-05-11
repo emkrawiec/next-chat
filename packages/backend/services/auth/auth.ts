@@ -1,17 +1,15 @@
-import { PasswordRecoveryDTO } from './../../dto/auth-dto';
-import { sendPasswordRecoveryEmail } from './../mail/mail';
-import { Prisma } from '@prisma/client'
 import { hash, verify } from 'argon2';
 import { v4 } from 'uuid';
-// 
+//
+import { PasswordRecoveryDTO } from './../../dto/auth-dto';
+import { sendPasswordRecoveryEmail } from './../mail/mail';
 import { prisma } from '../../prisma/init';
 import { User } from '.prisma/client';
-import { UserRegisterData, UserLoginData } from '../../dto/auth-dto';
-import { ClientRequestError } from '../../error/ClientRequestError';
 import { logger } from '../log/logger';
 import { sendWelcomeMail } from '../mail';
+import { prismaErrorWrapper } from '../../utils/error';
 
-type UserProfile = Pick<User, 'ID' | 'email' | 'avatar'>
+type UserProfile = Pick<User, 'ID' | 'email' | 'avatar'>;
 
 export const processUserSignup = async (userData: UserRegisterData) => {
   const maybeTakenUser = await getUserByEmail(userData.email);
@@ -21,19 +19,19 @@ export const processUserSignup = async (userData: UserRegisterData) => {
   } else {
     throw Error();
   }
-}
+};
 
-export const signupUser = async (userData: UserRegisterData) => {
-  const { email, password } = userData;
-  
-  try {
+export const signupUser = prismaErrorWrapper(
+  async (userData: UserRegisterData) => {
+    const { email, password } = userData;
+
     const hashedPass = await hash(password);
 
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashedPass
-      }
+        password: hashedPass,
+      },
     });
 
     logger.log('info', `User with email ${email} has signed up.`);
@@ -43,51 +41,47 @@ export const signupUser = async (userData: UserRegisterData) => {
     });
 
     return user;
-  } catch (err: unknown) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientValidationError) {
-      throw new ClientRequestError();
-    } else {
-      throw new Error();
-    }
   }
-}
+);
 
-const preparePasswordRecovery = async (email: User['email']) => {
-  try {
+const preparePasswordRecovery = prismaErrorWrapper(
+  async (email: User['email']) => {
     const hash = v4();
 
     await prisma.user.update({
       where: {
-        email
+        email,
       },
       data: {
         passwordRecoveryHash: hash,
         // 7 days.
-        passwordRecoveryTimestamp: new Date(Date.now() + 1000 * 3600 * 24 * 7)
-      }
+        passwordRecoveryTimestamp: new Date(Date.now() + 1000 * 3600 * 24 * 7),
+      },
     });
 
     return hash;
-  } catch (err: unknown) {
-    console.log(err);
-    throw err;
   }
-}
+);
 
-export const processPasswordRecoveryPreparation = async (email: User['email']) => {
+export const processPasswordRecoveryPreparation = async (
+  email: User['email']
+) => {
   const user = await getUserByEmail(email);
 
   if (user) {
     const hash = await preparePasswordRecovery(email);
+    const recoveryLink = new URL(process.env.APP_URL);
+    recoveryLink.searchParams.set('token', hash);
+    recoveryLink.pathname = '/password-recovery';
 
     await sendPasswordRecoveryEmail({
-      link: `http://localhost:3000/pass-recovery?token=${hash}`,
+      link: recoveryLink.toString(),
       to: user.email,
     });
   } else {
     throw new Error();
   }
-}
+};
 
 export const processPasswordRecovery = async (dto: PasswordRecoveryDTO) => {
   const { token, newPassword } = dto;
@@ -100,161 +94,114 @@ export const processPasswordRecovery = async (dto: PasswordRecoveryDTO) => {
   } else {
     throw new Error();
   }
-}
+};
 
-const getUserByPasswordRecoveryToken = async (token: User['passwordRecoveryHash']) => {
-  try {
+const getUserByPasswordRecoveryToken = prismaErrorWrapper(
+  async (token: User['passwordRecoveryHash']) => {
     const user = await prisma.user.findFirst({
       where: {
-        passwordRecoveryHash: token
-      }
+        passwordRecoveryHash: token,
+      },
     });
-  
+
     if (user) {
       return user;
     }
-  } catch (err: unknown) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientValidationError) {
-      console.log(err);
-      throw new ClientRequestError();
-    } else {
-      throw new Error();
-    }
   }
-}
+);
 
-const changeUserPassword = async (id: User['ID'], newPassword: User['password']) => {
-  try {
-    const newPasswordHash = await hash(newPassword)
+const changeUserPassword = prismaErrorWrapper(
+  async (id: User['ID'], newPassword: User['password']) => {
+    const newPasswordHash = await hash(newPassword);
 
     await prisma.user.update({
       where: {
-        ID: id
+        ID: id,
       },
       data: {
         password: newPasswordHash,
-      }
+      },
     });
-  } catch (err: unknown) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientValidationError) {
-      console.log(err);
-      throw new ClientRequestError();
-    } else {
-      throw new Error();
-    }
   }
-}
+);
 
-const clearPasswordHashAndTimestamp = async (id: User['ID']) => {
-  try {
+const clearPasswordHashAndTimestamp = prismaErrorWrapper(
+  async (id: User['ID']) => {
     await prisma.user.update({
       where: {
-        ID: id
+        ID: id,
       },
       data: {
         passwordRecoveryHash: null,
-        passwordRecoveryTimestamp: null
-      }
+        passwordRecoveryTimestamp: null,
+      },
     });
-  } catch (err: unknown) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientValidationError) {
-      console.log(err);
-      throw new ClientRequestError();
-    } else {
-      throw new Error();
-    }
   }
-}
- 
-export const getUserByID = async (id: User['ID']) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        ID: id
-      }
-    });
-  
-    if (user) {
-      return user;
-    }
-  } catch (err: unknown) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientValidationError) {
-      console.log(err);
-      throw new ClientRequestError();
-    } else {
-      throw new Error();
-    }
-  }
-}
+);
 
-export const getUserByEmail = async (email: User['email']) => {
-  try {
+export const getUserByID = prismaErrorWrapper(async (id: User['ID']) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      ID: id,
+    },
+  });
+
+  if (user) {
+    return user;
+  }
+});
+
+export const getUserByEmail = prismaErrorWrapper(
+  async (email: User['email']) => {
     const user = await prisma.user.findUnique({
       where: {
-        email
-      }
+        email,
+      },
     });
 
     if (user) {
       return user;
     }
-  } catch (err: unknown) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientValidationError) {
-      throw new ClientRequestError();
-    } else {
-      throw new Error();
-    }
   }
-}
+);
 
-export const getUserProfile = async (id: User["ID"]) => {
-  try {
-    const user = await getUserByID(id);
-    
-    if (user) {
-      return {
-        ID: user.ID,
-        email: user.email,
-        avatar: user.avatar
-      } as UserProfile
-    }
-  } catch (err: unknown) {
-    console.log(err);
-    throw new Error();
+export const getUserProfile = async (id: User['ID']) => {
+  const user = await getUserByID(id);
+
+  if (user) {
+    return {
+      ID: user.ID,
+      email: user.email,
+      avatar: user.avatar,
+    } as UserProfile;
   }
-}
+};
 
-export const isPasswordRecoveryTokenValid = async (token: User['passwordRecoveryHash']) => {
-  try { 
+export const isPasswordRecoveryTokenValid = prismaErrorWrapper(
+  async (token: User['passwordRecoveryHash']) => {
     const user = await prisma.user.findFirst({
       where: {
-        passwordRecoveryHash: token
-      }
+        passwordRecoveryHash: token,
+      },
     });
-  
+
     if (user) {
       const isTokenValid = user.passwordRecoveryTimestamp! > new Date();
       return isTokenValid;
     } else {
       return false;
     }
-  } catch (err: unknown) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientValidationError) {
-      throw new ClientRequestError();
-    } else {
-      throw new Error();
-    }
   }
-}
+);
 
-export const loginUser = async (loginData: UserLoginData) => {
-  const { email, password } = loginData;
+export const loginUser = prismaErrorWrapper(
+  async (loginData: UserLoginData) => {
+    const { email, password } = loginData;
 
-  try {
     const user = await prisma.user.findFirst({
       where: {
         email: email,
-      }
+      },
     });
 
     if (user) {
@@ -268,11 +215,5 @@ export const loginUser = async (loginData: UserLoginData) => {
         throw Error();
       }
     }
-  } catch (err: unknown) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientValidationError) {
-      throw new ClientRequestError();
-    } else {
-      throw new Error();
-    }
   }
-}
+);

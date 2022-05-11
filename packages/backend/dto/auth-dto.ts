@@ -1,11 +1,11 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const UserRegisterData = z.object({
+export const UserSignupPayload = z.object({
   email: z.string().nonempty(),
   password: z.string().nonempty(),
 });
 
-const UserLoginData = z.object({
+export const UserLoginPayload = z.object({
   email: z.string().nonempty(),
   password: z.string().nonempty(),
 });
@@ -21,11 +21,9 @@ const PasswordRecoveryPayload = z.object({
 
 const PasswordRecoveryDTO = PasswordRecoveryPayload.extend({});
 
-export const userRegisterDataValidator = UserRegisterData.parse.bind(UserRegisterData);
-export const userLoginDataValidator = UserLoginData.parse.bind(UserLoginData);
-
-export type UserRegisterData = z.infer<typeof UserRegisterData>
-export type PasswordRecoveryPreparePayload = z.infer<typeof PasswordRecoveryPreparePayload>
-export type PasswordRecoveryPayload = z.infer<typeof PasswordRecoveryPayload>
-export type PasswordRecoveryDTO = z.infer<typeof PasswordRecoveryDTO>
-export type UserLoginData = z.infer<typeof UserLoginData>
+export type PasswordRecoveryPreparePayload = z.infer<
+  typeof PasswordRecoveryPreparePayload
+>;
+export type PasswordRecoveryPayload = z.infer<typeof PasswordRecoveryPayload>;
+export type PasswordRecoveryDTO = z.infer<typeof PasswordRecoveryDTO>;
+export type UserLoginPayload = z.infer<typeof UserLoginPayload>;

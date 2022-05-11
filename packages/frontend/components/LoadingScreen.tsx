@@ -5,7 +5,7 @@ import { Spinner, Heading } from "@chakra-ui/react";
 export const LoadingScreen = () => {
   return (
     <Box
-      w="100%"
+          w="100%"
       display="flex"
       alignItems="center"
       justifyContent="center"

@@ -2,8 +2,15 @@ import { User as AppUser } from '@next-chat/types';
 
 declare global {
   namespace Express {
-    export interface User {
-      ID: AppUser['ID']
+    interface User {
+      ID: AppUser['ID'];
+    }
+  }
+  namespace NodeJS {
+    interface ProcessEnv {
+      APP_URL: string;
+      FRONTEND_DOMAIN: string;
+      SESSION_SECRET: string;
     }
   }
 }

@@ -1,7 +1,10 @@
-import { NextFunction, Request, Response } from "express";
-import { JoinRoomPayload, LeaveRoomPayload, Room } from "@next-chat/types";
-import omit from "just-omit";
-import { ClientRequestError } from "../../error/ClientRequestError";
+import Express from 'express';
+import omit from 'just-omit';
+import { Socket } from 'socket.io';
+//
+import { EmptyObject, LeaveRoomPayload, Room } from '@next-chat/types';
+//
+import { ClientRequestError } from '../../error/ClientRequestError';
 import {
   createRoom,
   getRoomMembers,
@@ -13,9 +16,9 @@ import {
   kickUserOutOfRoom,
   getRoom,
   editRoom,
-} from "../../services/room";
-import { createMessage, getMessagesForRoom } from "../../services/message";
-import { logger } from "../../services/log/logger";
+} from '../../services/room';
+import { createMessage, getMessagesForRoom } from '../../services/message';
+import { logger } from '../../services/log/logger';
 import {
   CreateRoomData,
   CreateMessagePayload,
@@ -27,26 +30,25 @@ import {
   KickUserOutOfRoomDTO,
   KickUserOutOfRoomPayload,
   EditRoomDTO,
-  EditRoomPayload
-} from "../../dto/room-dto";
-import { Socket } from "socket.io";
-import { getUserProfilesByIds } from "../../services/user";
+  EditRoomPayload,
+} from '../../dto/room-dto';
+import { getUserProfilesByIds } from '../../services/user';
 
-const getRoomMembersUserProfiles = (roomId: Room["ID"]) =>
+const getRoomMembersUserProfiles = (roomId: Room['ID']) =>
   getRoomMembers(roomId).then((userIds) =>
     getUserProfilesByIds(userIds.map((uid) => Number(uid)))
   );
 
-const getRoomData = (roomId: Room["ID"]) =>
+const getRoomData = (roomId: Room['ID']) =>
   getRoom(roomId).then((roomData) => ({
-    ...omit<Room, keyof Room>(roomData, "kickedUsers"),
+    ...omit<Room, keyof Room>(roomData, 'kickedUsers'),
     kickedUserIds: roomData?.kickedUsers.map((r) => r.userId),
   }));
 
 export const validateCreateRoomActionPayloadMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
+  req: Express.Request,
+  res: Express.Response,
+  next: Express.NextFunction
 ) => {
   try {
     createRoomDataValidator(req.body);
@@ -56,7 +58,10 @@ export const validateCreateRoomActionPayloadMiddleware = (
   }
 };
 
-export const createRoomHTTPAction = async (req: Request, res: Response) => {
+export const createRoomHTTPAction = async (
+  req: Express.Request,
+  res: Express.Response
+) => {
   const creatorUserId = req.user!.ID;
   const { name, createdAt, userIds } = req.body;
 
@@ -81,8 +86,8 @@ export const createRoomHTTPAction = async (req: Request, res: Response) => {
 };
 
 export const kickUserOutOfRoomHTTPAction = async (
-  req: Request<{}, {}, KickUserOutOfRoomPayload>,
-  res: Response
+  req: Express.Request<EmptyObject, EmptyObject, KickUserOutOfRoomPayload>,
+  res: Express.Response
 ) => {
   const { roomId, userId } = req.body;
 
@@ -101,10 +106,10 @@ export const kickUserOutOfRoomHTTPAction = async (
 };
 
 export const archiveRoomHTTPAction = async (
-  req: Request<{
+  req: Express.Request<{
     id: string;
   }>,
-  res: Response
+  res: Express.Response
 ) => {
   const userId = req.user!.ID;
   const { id } = req.params;
@@ -127,10 +132,10 @@ export const archiveRoomHTTPAction = async (
 };
 
 export const removeRoomHTTPAction = async (
-  req: Request<{
-    id: Room["ID"];
+  req: Express.Request<{
+    id: Room['ID'];
   }>,
-  res: Response
+  res: Express.Response
 ) => {
   const userId = req.user!.ID;
   const { id } = req.params;
@@ -153,7 +158,10 @@ export const removeRoomHTTPAction = async (
   }
 };
 
-export const getRoomsHTTPAction = async (req: Request, res: Response) => {
+export const getRoomsHTTPAction = async (
+  req: Express.Request,
+  res: Express.Response
+) => {
   const userId = req.user!.ID;
 
   try {
@@ -170,13 +178,13 @@ export const getRoomsHTTPAction = async (req: Request, res: Response) => {
 };
 
 export const getRoomHTTPAction = async (
-  req: Request<
+  req: Express.Request<
     {
       id: string;
     },
     Room
   >,
-  res: Response
+  res: Express.Response
 ) => {
   const { id } = req.params;
 
@@ -201,7 +209,7 @@ export const joinRoomWSAction =
     socket.join(String(roomId));
     await joinRoom(userId, roomId);
 
-    logger.log("info", `User with ID ${userId} joined room with ID ${roomId}`);
+    logger.log('info', `User with ID ${userId} joined room with ID ${roomId}`);
   };
 
 export const leaveRoomWSAction =
@@ -212,10 +220,13 @@ export const leaveRoomWSAction =
     socket.leave(String(roomId));
     await leaveRoom(userId, roomId);
 
-    logger.log("info", `User with ID ${userId} left room with ID ${roomId}`);
+    logger.log('info', `User with ID ${userId} left room with ID ${roomId}`);
   };
 
-export const createMessageHTTPAction = async (req: Request, res: Response) => {
+export const createMessageHTTPAction = async (
+  req: Express.Request,
+  res: Express.Response
+) => {
   const { roomId, createdAt, message } = req.body as CreateMessagePayload;
   const userId = req.user.ID;
 
@@ -247,12 +258,12 @@ export const createMessageWSAction =
 
     const newMessage = await createMessage(createMessageData);
 
-    socket.in(String(roomId)).emit("room:new-message", newMessage);
-    socket.emit("room:new-message", newMessage);
+    socket.in(String(roomId)).emit('room:new-message', newMessage);
+    socket.emit('room:new-message', newMessage);
   };
 
 export const getRoomMessagesAndMembersWSAction =
-  (socket: Socket) => async (payload: GetRoomMessagesPayload, fn) => {
+  () => async (payload: GetRoomMessagesPayload, fn) => {
     const { roomId } = payload;
 
     try {
@@ -278,10 +289,17 @@ export const getRoomMessagesAndMembersWSAction =
     }
   };
 
-export const editRoomHTTPAction = async (req: Request<{
-  id: string
-}, {}, EditRoomPayload>, res: Response) => {
-  const userId = req.user!.ID
+export const editRoomHTTPAction = async (
+  req: Express.Request<
+    {
+      id: string;
+    },
+    EmptyObject,
+    EditRoomPayload
+  >,
+  res: Express.Response
+) => {
+  const userId = req.user!.ID;
   const { id: roomId } = req.params;
   const { name, userIds } = req.body;
 
@@ -290,9 +308,9 @@ export const editRoomHTTPAction = async (req: Request<{
       name,
       roomId: Number(roomId),
       creatorId: userId,
-      userIds
-    }
-    
+      userIds,
+    };
+
     await editRoom(dto);
 
     return res.status(204).send();
@@ -303,7 +321,7 @@ export const editRoomHTTPAction = async (req: Request<{
       res.status(500).send();
     }
   }
-}
+};
 
 export const updateRoomMembersAction =
   (socket: Socket) => async (payload: RoomUpdateEvent) => {
@@ -313,7 +331,7 @@ export const updateRoomMembersAction =
       getRoomData(roomId),
     ]);
 
-    socket.in(String(roomId)).emit("room:update", {
+    socket.in(String(roomId)).emit('room:update', {
       users: userProfiles,
       room: roomData,
     });
