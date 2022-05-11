@@ -1,7 +1,9 @@
 # next-chat
 
 ## tl;dr;
-Mini SaaS application combining most of the functionalities you usally see on complex web app. These are:
+Chat app.
+
+Application combining most of the functionalities you usally see on complex web app. These are:
 - standard API communication via HTTP,
 - realtime communiation with WebSockets,
 - interactive UI 
